@@ -9,6 +9,7 @@ output: github_document
 library(tidyverse)
 ```
 
+
 ```{r load problem 1}
 subway_df = read.csv("./Files/NYC_Transit_Subway_Entrance_And_Exit_Data.csv", na = c("", "NA")) %>% 
   janitor::clean_names() %>% 
@@ -22,13 +23,16 @@ subway_df = read.csv("./Files/NYC_Transit_Subway_Entrance_And_Exit_Data.csv", na
     ),
     across(starts_with("route"), as.factor)
 )
-head(subway_df)
 
 subway_df_rows = nrow(subway_df)
 subway_df_cols = ncol(subway_df)
+head(subway_df)
+
 ```
 This is a dataset with `r subway_df_rows` rows and `r subway_df_cols` columns. It contains station's lines, station names, geographic coordinates, what routes each station serves, whether the station has an entry way, vending, and is ada compliant, and what sort of entrance type the station uses. The data was cleaned by using janitor::clean names and changing blank values to NA for clarity. The entry variable was changed from a character string to a logical value. The route values were changed to factors, since they were a mix of characters and integer vectors. Repeated rows were removed. The data seems tidy, but having a separate column for each route could be cleaned into one column, creating more rows and making the data easier to manipulate.
 
+
+## Train statistics
 ```{r}
 station_count = subway_df %>% 
   distinct(line, station_name) %>% 
@@ -43,6 +47,7 @@ prop_entry <- subway_df %>%
   summarise(proportion = mean(entry == TRUE)) %>%
   pull(proportion)
 ```
+
 How many distinct stations are there? Note that stations are identified both by name and by line (e.g. 125th St 8th Avenue; 125st Broadway; 125st Lenox); the distinct function may be useful here. - `r station_count`
 
 How many stations are ADA compliant? - `r ada_compliant_stations`
@@ -56,8 +61,10 @@ subway_df = subway_df %>%
     names_to = "route_number",
     values_to = "route_name"
   )
-sample(subway_df, 10)
+head(subway_df)
 ```
+
+## Train A line and ADA statistics
 
 ```{r}
 a_train_stations = subway_df %>% 
@@ -71,12 +78,15 @@ ada_a_train_stations = a_train_stations %>%
 
 ada_a_train_stations_count = nrow(ada_a_train_stations)
 ```
+
 A total of `r a_train_station_count` stations serve the A line. Of these, `r ada_a_train_stations_count` are ADA compliant.
 
+## Trash Wheel Summary
 ```{r problem 2}
 mr_trash_wheel_df = readxl::read_excel("./Files/202610 Trash Wheel Collection Data.xlsx", 
                                     sheet = "Mr. Trash Wheel",
-                                    range = "A2:N742"
+                                    range = "A2:N742",
+                                    na = c("", " ", ".", "NA", "Na")
                                     ) %>% 
   janitor::clean_names() %>%
   mutate(
@@ -89,7 +99,8 @@ mr_trash_wheel_df = readxl::read_excel("./Files/202610 Trash Wheel Collection Da
 
 professor_trash_wheel_df = readxl::read_excel("./Files/202610 Trash Wheel Collection Data.xlsx",
                                               sheet = "Professor Trash Wheel",
-                                              range = "A2:M139"
+                                              range = "A2:M139",
+                                              na = c("", " ", ".", "NA", "Na", "dive")
                                               ) %>% 
   janitor::clean_names() %>% 
   mutate(
@@ -100,7 +111,8 @@ professor_trash_wheel_df = readxl::read_excel("./Files/202610 Trash Wheel Collec
 
 gwynnda_df = readxl::read_excel("./Files/202610 Trash Wheel Collection Data.xlsx",
                                               sheet = "Gwynnda the Good Wheel of the W",
-                                              range = "A2:L394"
+                                              range = "A2:L394",
+                                              na = c("", " ", ".", "NA", "Na")
                                               ) %>% 
   janitor::clean_names() %>% 
   mutate(
@@ -123,11 +135,10 @@ gwynnda_june_2022_cigarettes = trash_wheel_df %>%
   pull(total)
 ```
 
-Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in the resulting dataset, and give examples of key variables. For available data, what was the total weight of trash collected by Professor Trash Wheel? What was the total number of cigarette butts collected by Gwynnda in June of 2022?
-
 This is a dataset with `r nrow(trash_wheel_df)` rows by `r ncol(trash_wheel_df)` columns. Our key variables are homes powered by the wheels, weight_tons and volume_cubic_yards (which give us measures of total trash removed), wheel (which lists which trash wheel each dumpster load is from), and date variables. Professor Trash Wheel collected a total of `r professor_trash_total` tons of trash. In June of 2022, Gwynnda removed `r gwynnda_june_2022_cigarettes` cigarette butts.
 
 
+## MCI  Summary
 ```{r problem 3}
 baseline_df = read.csv('./Files/MCI_baseline.csv', skip = 1, na = c("", "NA", ".")) %>%
   janitor::clean_names() %>% 
@@ -135,8 +146,8 @@ baseline_df = read.csv('./Files/MCI_baseline.csv', skip = 1, na = c("", "NA", ".
     sex = as.factor(
       case_match(
         sex, 
-        1 ~ "Male",
-        2 ~ "Female"
+        0 ~ "Female",
+        1 ~ "Male"
       )
     ),
     apoe4 = as.factor(
@@ -153,7 +164,44 @@ carrier_df = baseline_df %>%
     !is.na(age_at_onset)
   )
 
-baseline_df
-carrier_df
+head(baseline_df)
+
+
+mean_baseline_age = pull(baseline_df, current_age) %>% 
+  mean(na.rm = TRUE)
+
+proportion_female = carrier_df %>% 
+  summarise(proportion = mean(sex == "Female", na.rm = TRUE)) %>%
+  pull(proportion)
+
 ```
+
+A total of `r nrow(baseline_df)` patients were recruited for the study. `r nrow(carrier_df)` developed MCI. The recruited patients had an average age of `r mean_baseline_age` when recruited. `r round(proportion_female, 3) * 100`% of carriers were female.
+
+## Amyloid data Summary
+```{r}
+
+amyloid_df = read.csv('./Files/mci_amyloid.csv', skip = 1, na = c("", "NA", "Na", ".")) %>%
+  janitor::clean_names() %>%
+  rename(id = study_id) %>%
+  mutate(
+    baseline = as.numeric(baseline),
+    time_2 = as.numeric(time_2),
+    time_4 = as.numeric(time_4),
+    time_6 = as.numeric(time_6),
+    time_8 = as.numeric(time_8),
+    id = as.character(id)
+  )
+head(amyloid_df)
+```
+We imported this dataset, changed values to NA, skipped unnecessary informational lines from the CSV, cleaned the column names, and converted the columns to be numeric. This is a dataframe consisting of 6 columns and 487 rows. Each row represents a Study id, linking a baseline Amyloid 42/40 ratio to 4 followups at 2 year intervals. 
+
+## Combine both datasets
+Some participants appear only in the baseline study, and not in the amyloid follow up study - their study ids are missing (#49 for example).
+```{r}
+mci_combined_df <- inner_join(baseline_df, amyloid_df, by = "id")
+write_csv(mci_combined_df, "files/mci_combined.csv")
+head(mci_combined_df)
+```
+This dataset combines all participants who participated in both studies, and includes data from each. Their demographic characterists, apoe4 status, age at onset, as well as their baseline and follow up values for the amyloid 42/40 ratio study.
 
