@@ -125,4 +125,35 @@ gwynnda_june_2022_cigarettes = trash_wheel_df %>%
 
 Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in the resulting dataset, and give examples of key variables. For available data, what was the total weight of trash collected by Professor Trash Wheel? What was the total number of cigarette butts collected by Gwynnda in June of 2022?
 
-This is a dataset with `r nrow(trash_wheel_df)` rows by `r ncol(trash_wheel_df)` columns. Our key variables are homes powered by the wheels, weight_tons and volume_cubic_yards (which give us measures of total trash removed), wheel (which lists which trash wheel each dumpster load is from), and date variables. Professor Trash Wheel collected a total of `r professor_trash_total` tons of trash. In June of 2022, Gwynnda removed `r gwynnda_june_2022_cigarettes` cigarette butts.   
+This is a dataset with `r nrow(trash_wheel_df)` rows by `r ncol(trash_wheel_df)` columns. Our key variables are homes powered by the wheels, weight_tons and volume_cubic_yards (which give us measures of total trash removed), wheel (which lists which trash wheel each dumpster load is from), and date variables. Professor Trash Wheel collected a total of `r professor_trash_total` tons of trash. In June of 2022, Gwynnda removed `r gwynnda_june_2022_cigarettes` cigarette butts.
+
+
+```{r problem 3}
+baseline_df = read.csv('./Files/MCI_baseline.csv', skip = 1, na = c("", "NA", ".")) %>%
+  janitor::clean_names() %>% 
+  mutate(
+    sex = as.factor(
+      case_match(
+        sex, 
+        1 ~ "Male",
+        2 ~ "Female"
+      )
+    ),
+    apoe4 = as.factor(
+      case_match(
+        apoe4,
+        0 ~ "Non-Carrier",
+        1 ~ "Carrier"
+      )
+    ),
+    id = as.character(id)
+  )
+carrier_df = baseline_df %>% 
+  filter(
+    !is.na(age_at_onset)
+  )
+
+baseline_df
+carrier_df
+```
+
