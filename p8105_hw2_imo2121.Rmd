@@ -1,0 +1,28 @@
+---
+title: "p8105_hw2_imo2121"
+author: "Ian O'Keeffe"
+date: "2026-10-07"
+output: github_document
+---
+
+```{r setup}
+library(tidyverse)
+```
+
+```{r load problem 1}
+subway_df = read.csv("Files/NYC_Transit_Subway_Entrance_And_Exit_Data.csv", na = c("", "NA")) %>% 
+  janitor::clean_names() %>% 
+  select(line, station_name, station_latitude, station_longitude, route1:route11, entry, vending, entrance_type, ada) %>% 
+  mutate(
+    entry = case_match(
+      entry,
+      'YES' ~ TRUE,
+      'NO' ~ FALSE
+    ))
+subway_df
+```
+This is a dataset with 1868 rows and 19 columns. It contains station's lines, station names, geographic coordinates, what routes each station serves, whether the station has an entry way, vending, and is ada compliant, and what sort of entrance type the station uses. The data was cleaned by using janitor::clean names and changing blank values to NA for clarity. The entry variable was also changed from a character string to a logical value. The data seems tidy, but having a separate column for each route could be cleaned into one column, creating more rows and making the data easier to manipulate.
+
+
+
+
