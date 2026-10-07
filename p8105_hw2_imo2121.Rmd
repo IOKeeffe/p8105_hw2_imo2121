@@ -5,7 +5,7 @@ date: "2026-10-07"
 output: github_document
 ---
 
-```{r setup}
+```{r setup, message=FALSE, echo=FALSE}
 library(tidyverse)
 ```
 
@@ -13,16 +13,63 @@ library(tidyverse)
 subway_df = read.csv("Files/NYC_Transit_Subway_Entrance_And_Exit_Data.csv", na = c("", "NA")) %>% 
   janitor::clean_names() %>% 
   select(line, station_name, station_latitude, station_longitude, route1:route11, entry, vending, entrance_type, ada) %>% 
+  distinct() %>% 
   mutate(
-    entry = case_match(
+    entry = recode_values(
       entry,
       'YES' ~ TRUE,
       'NO' ~ FALSE
-    ))
-subway_df
+    ),
+    across(starts_with("route"), as.factor)
+)
+head(subway_df)
+
+subway_df_rows = nrow(subway_df)
+subway_df_cols = ncol(subway_df)
 ```
-This is a dataset with 1868 rows and 19 columns. It contains station's lines, station names, geographic coordinates, what routes each station serves, whether the station has an entry way, vending, and is ada compliant, and what sort of entrance type the station uses. The data was cleaned by using janitor::clean names and changing blank values to NA for clarity. The entry variable was also changed from a character string to a logical value. The data seems tidy, but having a separate column for each route could be cleaned into one column, creating more rows and making the data easier to manipulate.
+This is a dataset with `r subway_df_rows` rows and `r subway_df_cols` columns. It contains station's lines, station names, geographic coordinates, what routes each station serves, whether the station has an entry way, vending, and is ada compliant, and what sort of entrance type the station uses. The data was cleaned by using janitor::clean names and changing blank values to NA for clarity. The entry variable was changed from a character string to a logical value. The route values were changed to factors, since they were a mix of characters and integer vectors. Repeated rows were removed. The data seems tidy, but having a separate column for each route could be cleaned into one column, creating more rows and making the data easier to manipulate.
 
+```{r}
+station_count = subway_df %>% 
+  distinct(line, station_name) %>% 
+  nrow()
 
+ada_compliant_stations = subway_df %>% 
+  filter(ada == TRUE) %>%
+  nrow()
 
+prop_entry <- subway_df %>%
+  filter(vending == "NO") %>%
+  summarise(proportion = mean(entry == TRUE)) %>%
+  pull(proportion)
+```
+How many distinct stations are there? Note that stations are identified both by name and by line (e.g. 125th St 8th Avenue; 125st Broadway; 125st Lenox); the distinct function may be useful here. - `r station_count`
+
+How many stations are ADA compliant? - `r ada_compliant_stations`
+
+What proportion of station entrances / exits without vending allow entrance? `r round(prop_entry, 3)`
+
+```{r pivot}
+subway_df = subway_df %>% 
+  pivot_longer(
+    route1:route11,
+    names_to = "route_number",
+    values_to = "route_name"
+  )
+sample(subway_df, 10)
+```
+
+```{r}
+a_train_stations = subway_df %>% 
+  filter(route_name == "A") %>%
+  distinct(line, station_name)
+
+a_train_station_count = nrow(a_train_stations)
+
+ada_a_train_stations = a_train_stations %>% 
+  filter(ada = TRUE)
+
+ada_a_train_stations_count = nrow(ada_a_train_stations)
+```
+A total of `r a_train_station_count` stations serve the A line. Of these, `r ada_a_train_stations_count` are ADA compliant.
 
