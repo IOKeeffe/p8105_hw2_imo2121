@@ -10,7 +10,7 @@ library(tidyverse)
 ```
 
 ```{r load problem 1}
-subway_df = read.csv("Files/NYC_Transit_Subway_Entrance_And_Exit_Data.csv", na = c("", "NA")) %>% 
+subway_df = read.csv("./Files/NYC_Transit_Subway_Entrance_And_Exit_Data.csv", na = c("", "NA")) %>% 
   janitor::clean_names() %>% 
   select(line, station_name, station_latitude, station_longitude, route1:route11, entry, vending, entrance_type, ada) %>% 
   distinct() %>% 
@@ -73,3 +73,44 @@ ada_a_train_stations_count = nrow(ada_a_train_stations)
 ```
 A total of `r a_train_station_count` stations serve the A line. Of these, `r ada_a_train_stations_count` are ADA compliant.
 
+```{r problem 2}
+mr_trash_wheel_df = readxl::read_excel("./Files/202610 Trash Wheel Collection Data.xlsx", 
+                                    sheet = "Mr. Trash Wheel",
+                                    range = "A2:N742"
+                                    ) %>% 
+  janitor::clean_names() %>%
+  mutate(
+    sports_balls = as.integer(round(sports_balls)),
+    wheel = "Mr. Trash Wheel",
+    year = as.numeric(year),
+    plastic_bottles = as.numeric(plastic_bottles)
+    
+  )
+
+professor_trash_wheel_df = readxl::read_excel("./Files/202610 Trash Wheel Collection Data.xlsx",
+                                              sheet = "Professor Trash Wheel",
+                                              range = "A2:M139"
+                                              ) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    wheel = "Professor Trash Wheel",
+    year = as.numeric(year),
+    plastic_bottles = as.numeric(plastic_bottles)
+  )
+
+gwynnda_df = readxl::read_excel("./Files/202610 Trash Wheel Collection Data.xlsx",
+                                              sheet = "Gwynnda the Good Wheel of the W",
+                                              range = "A2:L394"
+                                              ) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    wheel = "Gwynnda",
+    year = as.numeric(year),
+    plastic_bottles = as.numeric(plastic_bottles)
+  )
+
+trash_wheel_df = bind_rows(mr_trash_wheel_df, professor_trash_wheel_df, gwynnda_df) %>% 
+  janitor::clean_names()
+```
+
+Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in the resulting dataset, and give examples of key variables. For available data, what was the total weight of trash collected by Professor Trash Wheel? What was the total number of cigarette butts collected by Gwynnda in June of 2022?
